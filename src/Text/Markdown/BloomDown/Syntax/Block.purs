@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Syntax.Block
+module Text.Markdown.BloomDown.Syntax.Block
   ( Block(..)
   , ListType(..)
   , CodeBlockType(..)
@@ -11,7 +11,7 @@ import Data.List as L
 import Test.StrongCheck.Arbitrary as SCA
 import Test.StrongCheck.Gen as Gen
 
-import Text.Markdown.SlamDown.Syntax.Inline (Inline)
+import Text.Markdown.BloomDown.Syntax.Inline (Inline)
 
 data Block a
   = Paragraph (L.List (Inline a))

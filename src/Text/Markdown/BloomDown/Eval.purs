@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Eval
+module Text.Markdown.BloomDown.Eval
   ( eval
   , LanguageId
   ) where
@@ -17,8 +17,8 @@ import Data.Newtype (unwrap)
 import Data.String as S
 import Data.Traversable as T
 
-import Text.Markdown.SlamDown.Syntax as SD
-import Text.Markdown.SlamDown.Traverse (everywhereM)
+import Text.Markdown.BloomDown.Syntax as SD
+import Text.Markdown.BloomDown.Traverse (everywhereM)
 
 type LanguageId = String
 
@@ -30,8 +30,8 @@ eval
     , value ∷ String → m a
     , list ∷ String → m (L.List a)
     }
-  → SD.SlamDownP a
-  → m (SD.SlamDownP a)
+  → SD.BloomDownP a
+  → m (SD.BloomDownP a)
 eval fs = everywhereM b i
   where
 

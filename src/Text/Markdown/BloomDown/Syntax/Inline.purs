@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Syntax.Inline
+module Text.Markdown.BloomDown.Syntax.Inline
   ( Inline(..)
   , LinkTarget(..)
   ) where
@@ -11,7 +11,7 @@ import Data.Maybe as M
 import Test.StrongCheck.Arbitrary as SCA
 import Test.StrongCheck.Gen as Gen
 
-import Text.Markdown.SlamDown.Syntax.FormField (FormField)
+import Text.Markdown.BloomDown.Syntax.FormField (FormField)
 
 data Inline a
   = Str String

@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Syntax.FormField
+module Text.Markdown.BloomDown.Syntax.FormField
   ( FormFieldP(..)
   , FormField
   , transFormField
@@ -29,8 +29,8 @@ import Partial.Unsafe (unsafePartial)
 import Test.StrongCheck.Arbitrary as SCA
 import Test.StrongCheck.Gen as Gen
 
-import Text.Markdown.SlamDown.Syntax.TextBox as TB
-import Text.Markdown.SlamDown.Syntax.Value as Value
+import Text.Markdown.BloomDown.Syntax.TextBox as TB
+import Text.Markdown.BloomDown.Syntax.Value as Value
 
 data FormFieldP f a
   = TextBox (TB.TextBox (Compose M.Maybe f))

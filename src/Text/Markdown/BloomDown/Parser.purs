@@ -1,7 +1,7 @@
-module Text.Markdown.SlamDown.Parser
+module Text.Markdown.BloomDown.Parser
   ( parseMd
   , validateBlock
-  , validateSlamDown
+  , validateBloomDown
   ) where
 
 import Prelude hiding (min)
@@ -18,9 +18,9 @@ import Data.Validation.Semigroup as V
 
 import Partial.Unsafe (unsafePartial)
 
-import Text.Markdown.SlamDown.Parser.Inline as Inline
-import Text.Markdown.SlamDown.Parser.References as Ref
-import Text.Markdown.SlamDown.Syntax as SD
+import Text.Markdown.BloomDown.Parser.Inline as Inline
+import Text.Markdown.BloomDown.Parser.References as Ref
+import Text.Markdown.BloomDown.Syntax as SD
 
 data Container a
   = CText String
@@ -363,14 +363,14 @@ validateBlock =
     SD.Lst lt blss → SD.Lst lt <$> traverse (traverse validateBlock) blss
     b → pure b
 
-validateSlamDown ∷ ∀ a. SD.SlamDownP a → V.V (Array String) (SD.SlamDownP a)
-validateSlamDown (SD.SlamDown bls) = SD.SlamDown <$> traverse validateBlock bls
+validateBloomDown ∷ ∀ a. SD.BloomDownP a → V.V (Array String) (SD.BloomDownP a)
+validateBloomDown (SD.BloomDown bls) = SD.BloomDown <$> traverse validateBlock bls
 
 tabsToSpaces ∷ String → String
 tabsToSpaces = S.replace (S.Pattern "\t") (S.Replacement "    ")
 
-parseMd ∷ ∀ a. (SD.Value a) ⇒ String → Either String (SD.SlamDownP a)
-parseMd s = map SD.SlamDown bs
+parseMd ∷ ∀ a. (SD.Value a) ⇒ String → Either String (SD.BloomDownP a)
+parseMd s = map SD.BloomDown bs
   where
     lines = L.fromFoldable $ S.split (S.Pattern "\n") $ S.replace (S.Pattern "\r") (S.Replacement "") $ tabsToSpaces s
     ctrs = parseContainers mempty lines

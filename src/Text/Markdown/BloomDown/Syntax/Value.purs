@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Syntax.Value
+module Text.Markdown.BloomDown.Syntax.Value
   ( class Value
   , stringValue
   , renderValue

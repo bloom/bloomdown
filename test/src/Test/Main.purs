@@ -21,10 +21,10 @@ import Data.String as S
 
 import Data.Tuple (uncurry)
 
-import Text.Markdown.SlamDown.Syntax as SD
-import Text.Markdown.SlamDown.Eval as SDE
-import Text.Markdown.SlamDown.Parser as SDP
-import Text.Markdown.SlamDown.Pretty as SDPR
+import Text.Markdown.BloomDown.Syntax as SD
+import Text.Markdown.BloomDown.Eval as SDE
+import Text.Markdown.BloomDown.Parser as SDP
+import Text.Markdown.BloomDown.Pretty as SDPR
 
 import Test.StrongCheck as SC
 import Test.StrongCheck.Arbitrary as SCA
@@ -60,7 +60,7 @@ instance valueNonEmptyString ∷ SD.Value NonEmptyString where
   stringValue = NonEmptyString
   renderValue (NonEmptyString str) = str
 
-testDocument ∷ ∀ e. Either String (SD.SlamDownP NonEmptyString) → Eff (TestEffects e) Unit
+testDocument ∷ ∀ e. Either String (SD.BloomDownP NonEmptyString) → Eff (TestEffects e) Unit
 testDocument sd = do
   let printed = SDPR.prettyPrintMd <$> sd
       parsed = printed >>= SDP.parseMd
@@ -74,7 +74,7 @@ testDocument sd = do
     <> show parsed
   SC.assert (parsed == sd SC.<?> "Test failed")
 
-failDocument ∷ ∀ e. Either String (SD.SlamDownP NonEmptyString) → Eff (TestEffects e) Unit
+failDocument ∷ ∀ e. Either String (SD.BloomDownP NonEmptyString) → Eff (TestEffects e) Unit
 failDocument sd = SC.assert (isLeft sd SC.<?> "Test failed")
 
 static ∷ ∀ e. Eff (TestEffects e) Unit
@@ -296,11 +296,11 @@ generated = do
       Trampoline.runTrampoline
         $ Gen.sample'
             10 (Gen.GenState { size: 10, seed })
-            (SDPR.prettyPrintMd <<< runTestSlamDown <$> SCA.arbitrary)
+            (SDPR.prettyPrintMd <<< runTestBloomDown <$> SCA.arbitrary)
 
   TR.traverse C.log docs
 
-  SC.quickCheck' 100 \(TestSlamDown sd) →
+  SC.quickCheck' 100 \(TestBloomDown sd) →
     let
       printed = SDPR.prettyPrintMd sd
       parsed = SDP.parseMd printed
@@ -325,13 +325,13 @@ smallArrayOf g = do
   len ← Gen.chooseInt 1 2
   Gen.vectorOf len g
 
-newtype TestSlamDown = TestSlamDown (SD.SlamDownP NonEmptyString)
+newtype TestBloomDown = TestBloomDown (SD.BloomDownP NonEmptyString)
 
-runTestSlamDown ∷ TestSlamDown → SD.SlamDownP NonEmptyString
-runTestSlamDown (TestSlamDown sd) = sd
+runTestBloomDown ∷ TestBloomDown → SD.BloomDownP NonEmptyString
+runTestBloomDown (TestBloomDown sd) = sd
 
-instance arbSlamDown ∷ SCA.Arbitrary TestSlamDown where
-  arbitrary = (TestSlamDown <<< SD.SlamDown <<< L.fromFoldable) <$> blocks
+instance arbBloomDown ∷ SCA.Arbitrary TestBloomDown where
+  arbitrary = (TestBloomDown <<< SD.BloomDown <<< L.fromFoldable) <$> blocks
 
 three ∷ ∀ a. a → a → a → Array a
 three a b c = [a, b, c]

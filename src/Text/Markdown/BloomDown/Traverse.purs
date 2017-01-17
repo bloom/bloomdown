@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Traverse
+module Text.Markdown.BloomDown.Traverse
   ( everywhereM
   , everywhere
   , everywhereTopDownM
@@ -15,17 +15,17 @@ import Data.Monoid (class Monoid)
 import Data.Newtype (un)
 import Data.Traversable as T
 
-import Text.Markdown.SlamDown.Syntax as SD
+import Text.Markdown.BloomDown.Syntax as SD
 
 everywhereM
   ∷ ∀ m a
   . (Monad m)
   ⇒ (SD.Block a → m (SD.Block a))
   → (SD.Inline a → m (SD.Inline a))
-  → SD.SlamDownP a
-  → m (SD.SlamDownP a)
-everywhereM b i (SD.SlamDown bs) =
-  SD.SlamDown <$> T.traverse b' bs
+  → SD.BloomDownP a
+  → m (SD.BloomDownP a)
+everywhereM b i (SD.BloomDown bs) =
+  SD.BloomDown <$> T.traverse b' bs
 
   where
   b' ∷ SD.Block a → m (SD.Block a)
@@ -46,8 +46,8 @@ everywhere
   ∷ ∀ a
   . (SD.Block a → SD.Block a)
   → (SD.Inline a → SD.Inline a)
-  → SD.SlamDownP a
-  → SD.SlamDownP a
+  → SD.BloomDownP a
+  → SD.BloomDownP a
 everywhere b i =
   un Id.Identity
     <<< everywhereM (pure <<< b) (pure <<< i)
@@ -57,10 +57,10 @@ everywhereTopDownM
   . (Monad m)
   ⇒ (SD.Block a → m (SD.Block a))
   → (SD.Inline a → m (SD.Inline a))
-  → SD.SlamDownP a
-  → m (SD.SlamDownP a)
-everywhereTopDownM b i (SD.SlamDown bs) =
-  SD.SlamDown <$>
+  → SD.BloomDownP a
+  → m (SD.BloomDownP a)
+everywhereTopDownM b i (SD.BloomDown bs) =
+  SD.BloomDown <$>
     T.traverse (b' <=< b) bs
   where
   b' ∷ SD.Block a → m (SD.Block a)
@@ -81,8 +81,8 @@ everywhereTopDown
   ∷ ∀ a
   . (SD.Block a → SD.Block a)
   → (SD.Inline a → SD.Inline a)
-  → SD.SlamDownP a
-  → SD.SlamDownP a
+  → SD.BloomDownP a
+  → SD.BloomDownP a
 everywhereTopDown b i =
   un Id.Identity <<<
     everywhereTopDownM
@@ -94,9 +94,9 @@ everythingM
   . (Monad m, Monoid r)
   ⇒ (SD.Block a → m r)
   → (SD.Inline a → m r)
-  → SD.SlamDownP a
+  → SD.BloomDownP a
   → m r
-everythingM b i (SD.SlamDown bs) =
+everythingM b i (SD.BloomDown bs) =
   F.fold <$> T.traverse b' bs
   where
   b' ∷ SD.Block a → m r
@@ -118,7 +118,7 @@ everything
   . (Monoid r)
   ⇒ (SD.Block a → r)
   → (SD.Inline a → r)
-  → SD.SlamDownP a
+  → SD.BloomDownP a
   → r
 everything b i =
   un Id.Identity <<<

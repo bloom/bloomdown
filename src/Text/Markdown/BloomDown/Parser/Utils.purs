@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Parser.Utils
+module Text.Markdown.BloomDown.Parser.Utils
   ( isWhitespace
   , isEmailAddress
   , parens

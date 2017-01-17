@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Pretty
+module Text.Markdown.BloomDown.Pretty
   ( prettyPrintMd
   , prettyPrintTextBoxValue
   ) where
@@ -17,13 +17,13 @@ import Data.String as S
 import Data.Newtype (unwrap)
 import Data.Unfoldable as U
 
-import Text.Markdown.SlamDown.Syntax as SD
+import Text.Markdown.BloomDown.Syntax as SD
 
 unlines ∷ L.List String → String
 unlines lst = S.joinWith "\n" $ A.fromFoldable lst
 
-prettyPrintMd ∷ ∀ a. (SD.Value a) ⇒ SD.SlamDownP a → String
-prettyPrintMd (SD.SlamDown bs) = unlines $ L.concatMap prettyPrintBlock bs
+prettyPrintMd ∷ ∀ a. (SD.Value a) ⇒ SD.BloomDownP a → String
+prettyPrintMd (SD.BloomDown bs) = unlines $ L.concatMap prettyPrintBlock bs
 
 replicateS ∷ Int → String → String
 replicateS n s = fold (const s <$> (1 L... n))

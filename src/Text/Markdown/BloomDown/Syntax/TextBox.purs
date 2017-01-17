@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Syntax.TextBox
+module Text.Markdown.BloomDown.Syntax.TextBox
   ( TimeValue
   , DateValue
   , DateTimeValue

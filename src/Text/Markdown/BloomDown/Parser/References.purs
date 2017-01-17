@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Parser.References
+module Text.Markdown.BloomDown.Parser.References
   ( parseLinkReference
   ) where
 
@@ -13,8 +13,8 @@ import Text.Parsing.Parser as P
 import Text.Parsing.Parser.Combinators as PC
 import Text.Parsing.Parser.String as PS
 
-import Text.Markdown.SlamDown.Parser.Utils as PU
-import Text.Markdown.SlamDown.Syntax as SD
+import Text.Markdown.BloomDown.Parser.Utils as PU
+import Text.Markdown.BloomDown.Syntax as SD
 
 parseLinkReference ∷ ∀ a. String → M.Maybe (SD.Block a)
 parseLinkReference = E.either (const M.Nothing) M.Just <<< flip P.runParser linkReference

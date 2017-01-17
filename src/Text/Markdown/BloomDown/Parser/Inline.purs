@@ -1,4 +1,4 @@
-module Text.Markdown.SlamDown.Parser.Inline
+module Text.Markdown.BloomDown.Parser.Inline
   ( parseInlines
   , validateFormField
   , validateInline
@@ -29,8 +29,8 @@ import Text.Parsing.Parser as P
 import Text.Parsing.Parser.Combinators as PC
 import Text.Parsing.Parser.String as PS
 
-import Text.Markdown.SlamDown.Parser.Utils as PU
-import Text.Markdown.SlamDown.Syntax as SD
+import Text.Markdown.BloomDown.Parser.Utils as PU
+import Text.Markdown.BloomDown.Syntax as SD
 
 parseInlines
   ∷ ∀ a

@@ -1,11 +1,12 @@
 {
-  "name": "purescript-markdown",
+  "name": "bloomdown",
   "license": "MIT",
   "authors": [
     "John A. De Goes <john@degoes.net> (http://degoes.net)",
     "Phil Freeman <paf31@cantab.net>",
     "Gary Burgess <gary.burgess@gmail.com>",
-    "Jon Sterling <jon@jonmsterling.com>"
+    "Jon Sterling <jon@jonmsterling.com>",
+    "Murphy Randle <murphyrandle@gmail.com>"
   ],
   "repository": {
     "type": "git",
