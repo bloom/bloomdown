@@ -1,6 +1,8 @@
 module Text.Markdown.BloomDown.Pretty
   ( prettyPrintMd
   , prettyPrintTextBoxValue
+  , prettyPrintBlock
+  , prettyPrintInline
   ) where
 
 import Prelude
