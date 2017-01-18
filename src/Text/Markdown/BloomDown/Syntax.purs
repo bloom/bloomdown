@@ -2,9 +2,9 @@ module Text.Markdown.BloomDown.Syntax
   ( BloomDownP(..)
   , BloomDown
 
-  , module SDF
-  , module SDI
-  , module SDB
+  , module BDF
+  , module BDI
+  , module BDB
   ) where
 
 import Prelude
@@ -14,12 +14,12 @@ import Data.Monoid (class Monoid, mempty)
 import Test.StrongCheck.Arbitrary as SCA
 import Test.StrongCheck.Gen as Gen
 
-import Text.Markdown.BloomDown.Syntax.Block as SDB
-import Text.Markdown.BloomDown.Syntax.FormField as SDF
-import Text.Markdown.BloomDown.Syntax.Inline as SDI
+import Text.Markdown.BloomDown.Syntax.Block as BDB
+import Text.Markdown.BloomDown.Syntax.FormField as BDF
+import Text.Markdown.BloomDown.Syntax.Inline as BDI
 
 -- | `BloomDownP` is the type of BloomDown abstract syntax trees which take values in `a`.
-data BloomDownP a = BloomDown (L.List (SDB.Block a))
+data BloomDownP a = BloomDown (L.List (BDB.Block a))
 
 type BloomDown = BloomDownP String
 

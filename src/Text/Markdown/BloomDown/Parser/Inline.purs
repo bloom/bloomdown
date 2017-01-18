@@ -30,13 +30,13 @@ import Text.Parsing.Parser.Combinators as PC
 import Text.Parsing.Parser.String as PS
 
 import Text.Markdown.BloomDown.Parser.Utils as PU
-import Text.Markdown.BloomDown.Syntax as SD
+import Text.Markdown.BloomDown.Syntax as BD
 
 parseInlines
   ∷ ∀ a
-  . (SD.Value a)
+  . (BD.Value a)
   ⇒ L.List String
-  → Either String (L.List (SD.Inline a))
+  → Either String (L.List (BD.Inline a))
 parseInlines s =
   map consolidate
     $ lmap P.parseErrorMessage
@@ -44,13 +44,13 @@ parseInlines s =
 
 consolidate
   ∷ ∀ a
-  . L.List (SD.Inline a)
-  → L.List (SD.Inline a)
+  . L.List (BD.Inline a)
+  → L.List (BD.Inline a)
 consolidate xs =
   case xs of
     L.Nil → L.Nil
-    L.Cons (SD.Str s1) (L.Cons (SD.Str s2) is) →
-      consolidate $ L.Cons (SD.Str (s1 <> s2)) is
+    L.Cons (BD.Str s1) (L.Cons (BD.Str s2) is) →
+      consolidate $ L.Cons (BD.Str (s1 <> s2)) is
     L.Cons i is → L.Cons i $ consolidate is
 
 someOf
@@ -96,37 +96,37 @@ type TextParserKit
 
 validateFormField
   ∷ ∀ a
-  . SD.FormField a
-  → V.V (Array String) (SD.FormField a)
+  . BD.FormField a
+  → V.V (Array String) (BD.FormField a)
 validateFormField field =
   case field of
-    SD.CheckBoxes (SD.Literal _) (SD.Unevaluated _) →
+    BD.CheckBoxes (BD.Literal _) (BD.Unevaluated _) →
       V.invalid ["Checkbox values & selection must be both literals or both unevaluated expressions"]
-    SD.CheckBoxes (SD.Unevaluated _) (SD.Literal _) →
+    BD.CheckBoxes (BD.Unevaluated _) (BD.Literal _) →
       V.invalid ["Checkbox values & selection must be both literals or both unevaluated expressions"]
     _ → pure field
 
 validateInline
   ∷ ∀ a
-  . SD.Inline a
-  → V.V (Array String) (SD.Inline a)
+  . BD.Inline a
+  → V.V (Array String) (BD.Inline a)
 validateInline inl =
   case inl of
-    SD.Emph inls → SD.Emph <$> traverse validateInline inls
-    SD.Strong inls → SD.Strong <$> traverse validateInline inls
-    SD.Link inls targ → SD.Link <$> traverse validateInline inls <*> pure targ
-    SD.Image inls str → SD.Image <$> traverse validateInline inls <*> pure str
-    SD.FormField str b ff → SD.FormField str b <$> validateFormField ff
+    BD.Emph inls → BD.Emph <$> traverse validateInline inls
+    BD.Strong inls → BD.Strong <$> traverse validateInline inls
+    BD.Link inls targ → BD.Link <$> traverse validateInline inls <*> pure targ
+    BD.Image inls str → BD.Image <$> traverse validateInline inls <*> pure str
+    BD.FormField str b ff → BD.FormField str b <$> validateFormField ff
     _ → pure inl
 
 
 inlines
   ∷ ∀ a
-  . (SD.Value a)
-  ⇒ P.Parser String (L.List (SD.Inline a))
+  . (BD.Value a)
+  ⇒ P.Parser String (L.List (BD.Inline a))
 inlines = L.many inline2 <* PS.eof
   where
-  inline0 ∷ P.Parser String (SD.Inline a)
+  inline0 ∷ P.Parser String (BD.Inline a)
   inline0 =
     Lazy.fix \p →
       alphaNumStr
@@ -138,12 +138,12 @@ inlines = L.many inline2 <* PS.eof
         <|> autolink
         <|> entity
 
-  inline1 ∷ P.Parser String (SD.Inline a)
+  inline1 ∷ P.Parser String (BD.Inline a)
   inline1 =
     PC.try inline0
       <|> PC.try link
 
-  inline2 ∷ P.Parser String (SD.Inline a)
+  inline2 ∷ P.Parser String (BD.Inline a)
   inline2 = do
     res ←
       PC.try formField
@@ -154,8 +154,8 @@ inlines = L.many inline2 <* PS.eof
       Right v → pure v
       Left e → P.fail e
 
-  alphaNumStr ∷ P.Parser String (SD.Inline a)
-  alphaNumStr = SD.Str <$> someOf isAlphaNum
+  alphaNumStr ∷ P.Parser String (BD.Inline a)
+  alphaNumStr = BD.Str <$> someOf isAlphaNum
 
   isAlphaNum ∷ Char → Boolean
   isAlphaNum c =
@@ -165,85 +165,85 @@ inlines = L.many inline2 <* PS.eof
     where s = S.singleton c
 
   emphasis
-    ∷ P.Parser String (SD.Inline a)
-    → (L.List (SD.Inline a) → SD.Inline a)
+    ∷ P.Parser String (BD.Inline a)
+    → (L.List (BD.Inline a) → BD.Inline a)
     → String
-    → P.Parser String (SD.Inline a)
+    → P.Parser String (BD.Inline a)
   emphasis p f s = do
     PS.string s
     f <$> PC.manyTill p (PS.string s)
 
-  emph ∷ P.Parser String (SD.Inline a) → P.Parser String (SD.Inline a)
-  emph p = emphasis p SD.Emph "*" <|> emphasis p SD.Emph "_"
+  emph ∷ P.Parser String (BD.Inline a) → P.Parser String (BD.Inline a)
+  emph p = emphasis p BD.Emph "*" <|> emphasis p BD.Emph "_"
 
-  strong ∷ P.Parser String (SD.Inline a) → P.Parser String (SD.Inline a)
-  strong p = emphasis p SD.Strong "**" <|> emphasis p SD.Strong "__"
+  strong ∷ P.Parser String (BD.Inline a) → P.Parser String (BD.Inline a)
+  strong p = emphasis p BD.Strong "**" <|> emphasis p BD.Strong "__"
 
-  strongEmph ∷ P.Parser String (SD.Inline a) → P.Parser String (SD.Inline a)
+  strongEmph ∷ P.Parser String (BD.Inline a) → P.Parser String (BD.Inline a)
   strongEmph p = emphasis p f "***" <|> emphasis p f "___"
     where
-    f is = SD.Strong $ L.singleton $ SD.Emph is
+    f is = BD.Strong $ L.singleton $ BD.Emph is
 
-  space ∷ P.Parser String (SD.Inline a)
+  space ∷ P.Parser String (BD.Inline a)
   space = (toSpace <<< (S.singleton <$> _)) <$> L.some (PS.satisfy PU.isWhitespace)
     where
     toSpace cs
       | "\n" `elem` cs =
         case L.take 2 cs of
-          L.Cons " " (L.Cons " " L.Nil) → SD.LineBreak
-          _ → SD.SoftBreak
-      | otherwise = SD.Space
+          L.Cons " " (L.Cons " " L.Nil) → BD.LineBreak
+          _ → BD.SoftBreak
+      | otherwise = BD.Space
 
-  code ∷ P.Parser String (SD.Inline a)
+  code ∷ P.Parser String (BD.Inline a)
   code = do
     eval ← PC.option false (PS.string "!" *> pure true)
     ticks ← someOf (\x → S.singleton x == "`")
     contents ← (S.fromCharArray <<< A.fromFoldable) <$> PC.manyTill PS.anyChar (PS.string ticks)
-    pure <<< SD.Code eval <<< S.trim $ contents
+    pure <<< BD.Code eval <<< S.trim $ contents
 
 
-  link ∷ P.Parser String (SD.Inline a)
-  link = SD.Link <$> linkLabel <*> linkTarget
+  link ∷ P.Parser String (BD.Inline a)
+  link = BD.Link <$> linkLabel <*> linkTarget
     where
-    linkLabel ∷ P.Parser String (L.List (SD.Inline a))
+    linkLabel ∷ P.Parser String (L.List (BD.Inline a))
     linkLabel = PS.string "[" *> PC.manyTill (inline0 <|> other) (PS.string "]")
 
-    linkTarget ∷ P.Parser String SD.LinkTarget
+    linkTarget ∷ P.Parser String BD.LinkTarget
     linkTarget = inlineLink <|> referenceLink
 
-    inlineLink ∷ P.Parser String SD.LinkTarget
-    inlineLink = SD.InlineLink <<< S.fromCharArray <<< A.fromFoldable <$> (PS.string "(" *> PC.manyTill PS.anyChar (PS.string ")"))
+    inlineLink ∷ P.Parser String BD.LinkTarget
+    inlineLink = BD.InlineLink <<< S.fromCharArray <<< A.fromFoldable <$> (PS.string "(" *> PC.manyTill PS.anyChar (PS.string ")"))
 
-    referenceLink ∷ P.Parser String SD.LinkTarget
-    referenceLink = SD.ReferenceLink <$> PC.optionMaybe ((S.fromCharArray <<< A.fromFoldable) <$> (PS.string "[" *> PC.manyTill PS.anyChar (PS.string "]")))
+    referenceLink ∷ P.Parser String BD.LinkTarget
+    referenceLink = BD.ReferenceLink <$> PC.optionMaybe ((S.fromCharArray <<< A.fromFoldable) <$> (PS.string "[" *> PC.manyTill PS.anyChar (PS.string "]")))
 
-  image ∷ P.Parser String (SD.Inline a)
-  image = SD.Image <$> imageLabel <*> imageUrl
+  image ∷ P.Parser String (BD.Inline a)
+  image = BD.Image <$> imageLabel <*> imageUrl
     where
-    imageLabel ∷ P.Parser String (L.List (SD.Inline a))
+    imageLabel ∷ P.Parser String (L.List (BD.Inline a))
     imageLabel = PS.string "![" *> PC.manyTill (inline1 <|> other) (PS.string "]")
 
     imageUrl ∷ P.Parser String String
     imageUrl = S.fromCharArray <<< A.fromFoldable <$> (PS.string "(" *> PC.manyTill PS.anyChar (PS.string ")"))
 
-  autolink ∷ P.Parser String (SD.Inline a)
+  autolink ∷ P.Parser String (BD.Inline a)
   autolink = do
     PS.string "<"
     url ← (S.fromCharArray <<< A.fromFoldable) <$> (PS.anyChar `PC.many1Till` PS.string ">")
-    pure $ SD.Link (L.singleton $ SD.Str (autoLabel url)) (SD.InlineLink url)
+    pure $ BD.Link (L.singleton $ BD.Str (autoLabel url)) (BD.InlineLink url)
     where
     autoLabel ∷ String → String
     autoLabel s
       | PU.isEmailAddress s = "mailto:" <> s
       | otherwise = s
 
-  entity ∷ P.Parser String (SD.Inline a)
+  entity ∷ P.Parser String (BD.Inline a)
   entity = do
     PS.string "&"
     s ← (S.fromCharArray <<< A.fromFoldable) <$> (PS.noneOf (S.toCharArray ";") `PC.many1Till` PS.string ";")
-    pure $ SD.Entity $ "&" <> s <> ";"
+    pure $ BD.Entity $ "&" <> s <> ";"
 
-  formField ∷ P.Parser String (Either String (SD.Inline a))
+  formField ∷ P.Parser String (Either String (BD.Inline a))
   formField =
     do
       l ← label
@@ -255,7 +255,7 @@ inlines = L.many inline2 <* PS.eof
         PS.string "="
         PU.skipSpaces
         formElement
-      pure $ map (SD.FormField l r) fe
+      pure $ map (BD.FormField l r) fe
     where
     label =
       someOf isAlphaNum
@@ -265,7 +265,7 @@ inlines = L.many inline2 <* PS.eof
 
     required = PC.option false (PS.string "*" *> pure true)
 
-  formElement ∷ P.Parser String (Either String (SD.FormField a))
+  formElement ∷ P.Parser String (Either String (BD.FormField a))
   formElement =
     PC.try textBox
       <|> PC.try (Right <$> radioButtons)
@@ -273,13 +273,13 @@ inlines = L.many inline2 <* PS.eof
       <|> PC.try (Right <$> dropDown)
     where
 
-    textBox ∷ P.Parser String (Either String (SD.FormField a))
+    textBox ∷ P.Parser String (Either String (BD.FormField a))
     textBox = do
       template ← parseTextBoxTemplate
       PU.skipSpaces
       defVal ← PC.optionMaybe $ PS.string "("
       case defVal of
-        M.Nothing → pure $ Right $ SD.TextBox $ SD.transTextBox (const $ Compose M.Nothing) template
+        M.Nothing → pure $ Right $ BD.TextBox $ BD.transTextBox (const $ Compose M.Nothing) template
         M.Just _ → do
           PU.skipSpaces
           mdef ← PC.optionMaybe $ PC.try $ parseTextBox (_ /= ')') (expr id) template
@@ -287,33 +287,33 @@ inlines = L.many inline2 <* PS.eof
             M.Just def → do
               PU.skipSpaces
               PS.string ")"
-              pure $ Right $ SD.TextBox $ SD.transTextBox (M.Just >>> Compose) def
+              pure $ Right $ BD.TextBox $ BD.transTextBox (M.Just >>> Compose) def
             M.Nothing →
               pure $ Left case template of
-                SD.DateTime SD.Minutes _ →
+                BD.DateTime BD.Minutes _ →
                   "Incorrect datetime default value, please use \"YYYY-MM-DD HH:mm\" or \"YYYY-MM-DDTHH:mm\" format"
-                SD.DateTime SD.Seconds _ →
+                BD.DateTime BD.Seconds _ →
                   "Incorrect datetime default value, please use \"YYYY-MM-DD HH:mm:ss\" or \"YYYY-MM-DDTHH:mm:ss\" format"
-                SD.Date _ →
+                BD.Date _ →
                   "Incorrect date default value, please use \"YYYY-MM-DD\" format"
-                SD.Time SD.Minutes _ →
+                BD.Time BD.Minutes _ →
                   "Incorrect time default value, please use \"HH:mm\" format"
-                SD.Time SD.Seconds _ →
+                BD.Time BD.Seconds _ →
                   "Incorrect time default value, please use \"HH:mm:ss\" format"
-                SD.Numeric _ →
+                BD.Numeric _ →
                   "Incorrect numeric default value"
-                SD.PlainText _ →
+                BD.PlainText _ →
                   "Incorrect default value"
 
-    parseTextBoxTemplate ∷ P.Parser String (SD.TextBox (Const Unit))
+    parseTextBoxTemplate ∷ P.Parser String (BD.TextBox (Const Unit))
     parseTextBoxTemplate =
-      SD.DateTime SD.Seconds (Const unit) <$ PC.try (parseDateTimeTemplate SD.Seconds)
-        <|> SD.DateTime SD.Minutes (Const unit) <$ PC.try (parseDateTimeTemplate SD.Minutes)
-        <|> SD.Date (Const unit) <$ PC.try parseDateTemplate
-        <|> SD.Time SD.Seconds (Const unit) <$ PC.try (parseTimeTemplate SD.Seconds)
-        <|> SD.Time SD.Minutes (Const unit) <$ PC.try (parseTimeTemplate SD.Minutes)
-        <|> SD.Numeric (Const unit) <$ PC.try parseNumericTemplate
-        <|> SD.PlainText (Const unit) <$ parsePlainTextTemplate
+      BD.DateTime BD.Seconds (Const unit) <$ PC.try (parseDateTimeTemplate BD.Seconds)
+        <|> BD.DateTime BD.Minutes (Const unit) <$ PC.try (parseDateTimeTemplate BD.Minutes)
+        <|> BD.Date (Const unit) <$ PC.try parseDateTemplate
+        <|> BD.Time BD.Seconds (Const unit) <$ PC.try (parseTimeTemplate BD.Seconds)
+        <|> BD.Time BD.Minutes (Const unit) <$ PC.try (parseTimeTemplate BD.Minutes)
+        <|> BD.Numeric (Const unit) <$ PC.try parseNumericTemplate
+        <|> BD.PlainText (Const unit) <$ parsePlainTextTemplate
 
       where
         parseDateTimeTemplate prec = do
@@ -332,7 +332,7 @@ inlines = L.many inline2 <* PS.eof
           und
           PU.skipSpaces *> colon *> PU.skipSpaces
           und
-          when (prec == SD.Seconds) do
+          when (prec == BD.Seconds) do
             PU.skipSpaces *> colon *> PU.skipSpaces
             void und
 
@@ -347,12 +347,12 @@ inlines = L.many inline2 <* PS.eof
     und ∷ P.Parser String String
     und = someOf (\x → x == '_')
 
-    radioButtons ∷ P.Parser String (SD.FormField a)
+    radioButtons ∷ P.Parser String (BD.FormField a)
     radioButtons = literalRadioButtons <|> evaluatedRadioButtons
       where
         literalRadioButtons = do
           ls ← L.some $ PC.try do
-            let item = SD.stringValue <<< S.trim <$> manyOf \c → not $ c `elem` ['(',')','!','`']
+            let item = BD.stringValue <<< S.trim <$> manyOf \c → not $ c `elem` ['(',')','!','`']
             PU.skipSpaces
             b ← (PS.string "(x)" *> pure true) <|> (PS.string "()" *> pure false)
             PU.skipSpaces
@@ -362,61 +362,61 @@ inlines = L.many inline2 <* PS.eof
             case L.filter fst ls of
               L.Cons (Tuple _ l) L.Nil → pure l
               _ → P.fail "Invalid number of selected radio buttons"
-          pure $ SD.RadioButtons (SD.Literal sel) (SD.Literal (map snd ls))
+          pure $ BD.RadioButtons (BD.Literal sel) (BD.Literal (map snd ls))
 
         evaluatedRadioButtons = do
-          SD.RadioButtons
+          BD.RadioButtons
             <$> PU.parens unevaluated
             <*> (PU.skipSpaces *> unevaluated)
 
-    checkBoxes ∷ P.Parser String (SD.FormField a)
+    checkBoxes ∷ P.Parser String (BD.FormField a)
     checkBoxes = literalCheckBoxes <|> evaluatedCheckBoxes
       where
         literalCheckBoxes = do
           ls ← L.some $ PC.try do
-            let item = SD.stringValue <<< S.trim <$> manyOf \c → not $ c `elem` ['[',']','!','`']
+            let item = BD.stringValue <<< S.trim <$> manyOf \c → not $ c `elem` ['[',']','!','`']
             PU.skipSpaces
             b ← (PS.string "[x]" *> pure true) <|> (PS.string "[]" *> pure false)
             PU.skipSpaces
             l ← item
             pure $ Tuple b l
-          pure $ SD.CheckBoxes (SD.Literal $ snd <$> L.filter fst ls) (SD.Literal $ snd <$> ls)
+          pure $ BD.CheckBoxes (BD.Literal $ snd <$> L.filter fst ls) (BD.Literal $ snd <$> ls)
 
         evaluatedCheckBoxes =
-          SD.CheckBoxes
+          BD.CheckBoxes
             <$> PU.squares unevaluated
             <*> (PU.skipSpaces *> unevaluated)
 
-    dropDown ∷ P.Parser String (SD.FormField a)
+    dropDown ∷ P.Parser String (BD.FormField a)
     dropDown = do
-      let item = SD.stringValue <<< S.trim <$> manyOf \c → not $ c `elem` ['{','}',',','!','`','(',')']
+      let item = BD.stringValue <<< S.trim <$> manyOf \c → not $ c `elem` ['{','}',',','!','`','(',')']
       ls ← PU.braces $ expr id $ (PC.try (PU.skipSpaces *> item)) `PC.sepBy` (PU.skipSpaces *> PS.string ",")
       sel ← PC.optionMaybe $ PU.skipSpaces *> (PU.parens $ expr id $ item)
-      pure $ SD.DropDown sel ls
+      pure $ BD.DropDown sel ls
 
-  other ∷ P.Parser String (SD.Inline a)
+  other ∷ P.Parser String (BD.Inline a)
   other = do
     c ← S.singleton <$> PS.anyChar
     if c == "\\"
       then
-        (SD.Str <<< S.singleton) <$> PS.anyChar
-          <|> (PS.satisfy (\x → S.singleton x == "\n") *> pure SD.LineBreak)
-          <|> pure (SD.Str "\\")
-      else pure (SD.Str c)
+        (BD.Str <<< S.singleton) <$> PS.anyChar
+          <|> (PS.satisfy (\x → S.singleton x == "\n") *> pure BD.LineBreak)
+          <|> pure (BD.Str "\\")
+      else pure (BD.Str c)
 
 parseTextBox
   ∷ ∀ f g
   . (Char → Boolean)
   → (∀ a. P.Parser String a → P.Parser String (g a))
-  → SD.TextBox f
-  → P.Parser String (SD.TextBox g)
+  → BD.TextBox f
+  → P.Parser String (BD.TextBox g)
 parseTextBox isPlainText eta template =
   case template of
-    SD.DateTime prec _ → SD.DateTime prec <$> eta (parseDateTimeValue prec)
-    SD.Date _ → SD.Date <$> eta parseDateValue
-    SD.Time prec _ → SD.Time prec <$> eta (parseTimeValue prec)
-    SD.Numeric _ → SD.Numeric <$> eta parseNumericValue
-    SD.PlainText _ → SD.PlainText <$> eta parsePlainTextValue
+    BD.DateTime prec _ → BD.DateTime prec <$> eta (parseDateTimeValue prec)
+    BD.Date _ → BD.Date <$> eta parseDateValue
+    BD.Time prec _ → BD.Time prec <$> eta (parseTimeValue prec)
+    BD.Numeric _ → BD.Numeric <$> eta parseNumericValue
+    BD.PlainText _ → BD.PlainText <$> eta parsePlainTextValue
 
   where
     parseDateTimeValue prec = do
@@ -442,11 +442,11 @@ parseTextBox isPlainText eta template =
       minutes ← natural
       when (minutes > 59) $ P.fail "Incorrect minutes"
       seconds ← case prec of
-        SD.Minutes -> do
+        BD.Minutes -> do
           scolon ← PC.try $ PC.optionMaybe $ PU.skipSpaces *> colon
           when (M.isJust scolon) $ P.fail "Unexpected seconds component"
           pure M.Nothing
-        SD.Seconds -> do
+        BD.Seconds -> do
           PU.skipSpaces *> colon *> PU.skipSpaces
           secs ← natural
           when (secs > 59) $ P.fail "Incorrect seconds"
@@ -519,13 +519,13 @@ expr
   ∷ ∀ b
   . (∀ e. P.Parser String e → P.Parser String e)
   → P.Parser String b
-  → P.Parser String (SD.Expr b)
+  → P.Parser String (BD.Expr b)
 expr f p =
   PC.try (f unevaluated)
-    <|> SD.Literal <$> p
+    <|> BD.Literal <$> p
 
-unevaluated ∷ ∀ b. P.Parser String (SD.Expr b)
+unevaluated ∷ ∀ b. P.Parser String (BD.Expr b)
 unevaluated = do
   PS.string "!"
   ticks ← someOf (\x → S.singleton x == "`")
-  SD.Unevaluated <<< S.fromCharArray <<< A.fromFoldable <$> PC.manyTill PS.anyChar (PS.string ticks)
+  BD.Unevaluated <<< S.fromCharArray <<< A.fromFoldable <$> PC.manyTill PS.anyChar (PS.string ticks)

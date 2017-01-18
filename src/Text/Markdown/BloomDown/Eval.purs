@@ -17,75 +17,75 @@ import Data.Newtype (unwrap)
 import Data.String as S
 import Data.Traversable as T
 
-import Text.Markdown.BloomDown.Syntax as SD
+import Text.Markdown.BloomDown.Syntax as BD
 import Text.Markdown.BloomDown.Traverse (everywhereM)
 
 type LanguageId = String
 
 eval
   ∷ ∀ m a
-  . (Monad m, SD.Value a)
+  . (Monad m, BD.Value a)
   ⇒ { code ∷ M.Maybe LanguageId → String → m a
-    , textBox ∷ SD.TextBox (Const String) → m (SD.TextBox Identity)
+    , textBox ∷ BD.TextBox (Const String) → m (BD.TextBox Identity)
     , value ∷ String → m a
     , list ∷ String → m (L.List a)
     }
-  → SD.BloomDownP a
-  → m (SD.BloomDownP a)
+  → BD.BloomDownP a
+  → m (BD.BloomDownP a)
 eval fs = everywhereM b i
   where
 
-  b ∷ SD.Block a → m (SD.Block a)
-  b (SD.CodeBlock (SD.Fenced true info) code) =
-    SD.CodeBlock (SD.Fenced false info) <<< pure <<< SD.renderValue
+  b ∷ BD.Block a → m (BD.Block a)
+  b (BD.CodeBlock (BD.Fenced true info) code) =
+    BD.CodeBlock (BD.Fenced false info) <<< pure <<< BD.renderValue
       <$> fs.code (M.Just info) (S.joinWith "\n" (A.fromFoldable code))
   b other = pure $ other
 
-  i ∷ SD.Inline a → m (SD.Inline a)
-  i (SD.Code true code) = SD.Code false <<< SD.renderValue <$> fs.code M.Nothing code
-  i (SD.FormField l r field) = SD.FormField l r <$> f field
+  i ∷ BD.Inline a → m (BD.Inline a)
+  i (BD.Code true code) = BD.Code false <<< BD.renderValue <$> fs.code M.Nothing code
+  i (BD.FormField l r field) = BD.FormField l r <$> f field
   i other = pure $ other
 
-  f ∷ SD.FormField a → m (SD.FormField a)
-  f (SD.TextBox tb) = SD.TextBox <<< M.fromMaybe tb <$> nbeTextBox tb
+  f ∷ BD.FormField a → m (BD.FormField a)
+  f (BD.TextBox tb) = BD.TextBox <<< M.fromMaybe tb <$> nbeTextBox tb
     where
       -- normalization-by-evaluation proceeds by evaluating an object into a semantic model
       -- (in this case, `Identity`), and then quoting the result back into the syntax.
-      nbeTextBox ∷ SD.TextBox (Compose M.Maybe SD.Expr) → m (M.Maybe (SD.TextBox (Compose M.Maybe SD.Expr)))
+      nbeTextBox ∷ BD.TextBox (Compose M.Maybe BD.Expr) → m (M.Maybe (BD.TextBox (Compose M.Maybe BD.Expr)))
       nbeTextBox = evalTextBox >>> map (map quoteTextBox)
 
-      evalTextBox ∷ SD.TextBox (Compose M.Maybe SD.Expr) → m (M.Maybe (SD.TextBox Identity))
+      evalTextBox ∷ BD.TextBox (Compose M.Maybe BD.Expr) → m (M.Maybe (BD.TextBox Identity))
       evalTextBox tb' = T.sequence $ fs.textBox <$> asCode tb' <|> pure <$> asLit tb'
         where
-          asLit = SD.traverseTextBox (unwrap >>> (_ >>= SD.getLiteral) >>> map Identity)
-          asCode = SD.traverseTextBox (unwrap >>> (_ >>= SD.getUnevaluated) >>> map Const)
+          asLit = BD.traverseTextBox (unwrap >>> (_ >>= BD.getLiteral) >>> map Identity)
+          asCode = BD.traverseTextBox (unwrap >>> (_ >>= BD.getUnevaluated) >>> map Const)
 
-      quoteTextBox ∷ SD.TextBox Identity → SD.TextBox (Compose M.Maybe SD.Expr)
-      quoteTextBox = SD.transTextBox (unwrap >>> SD.Literal >>> M.Just >>> Compose)
+      quoteTextBox ∷ BD.TextBox Identity → BD.TextBox (Compose M.Maybe BD.Expr)
+      quoteTextBox = BD.transTextBox (unwrap >>> BD.Literal >>> M.Just >>> Compose)
 
-  f (SD.RadioButtons sel opts) = do
+  f (BD.RadioButtons sel opts) = do
     sel' ← evalExpr fs.value sel
     opts' ← evalExpr fs.list opts
-    pure $ SD.RadioButtons sel' (mergeSelection (L.singleton <$> sel') opts')
+    pure $ BD.RadioButtons sel' (mergeSelection (L.singleton <$> sel') opts')
 
-  f (SD.CheckBoxes sel vals) = do
+  f (BD.CheckBoxes sel vals) = do
     sel' ← evalExpr fs.list sel
     vals' ← evalExpr fs.list vals
-    pure $ SD.CheckBoxes sel' (mergeSelection sel' vals')
+    pure $ BD.CheckBoxes sel' (mergeSelection sel' vals')
 
-  f (SD.DropDown msel opts) = do
+  f (BD.DropDown msel opts) = do
     msel' ← T.traverse (evalExpr fs.value) msel
     opts' ← evalExpr fs.list opts
-    pure $ SD.DropDown msel' $ M.maybe opts' (flip mergeSelection opts' <<< map L.singleton) msel'
+    pure $ BD.DropDown msel' $ M.maybe opts' (flip mergeSelection opts' <<< map L.singleton) msel'
 
-  mergeSelection ∷ SD.Expr (L.List a) → SD.Expr (L.List a) → SD.Expr (L.List a)
-  mergeSelection (SD.Literal sel) (SD.Literal xs) = SD.Literal $ L.union sel xs
+  mergeSelection ∷ BD.Expr (L.List a) → BD.Expr (L.List a) → BD.Expr (L.List a)
+  mergeSelection (BD.Literal sel) (BD.Literal xs) = BD.Literal $ L.union sel xs
   mergeSelection _ exs = exs
 
-  evalExpr ∷ ∀ e. (String → m e) → SD.Expr e → m (SD.Expr e)
-  evalExpr _ (SD.Literal a) = pure $ SD.Literal a
-  evalExpr e (SD.Unevaluated s) = SD.Literal <$> e s
+  evalExpr ∷ ∀ e. (String → m e) → BD.Expr e → m (BD.Expr e)
+  evalExpr _ (BD.Literal a) = pure $ BD.Literal a
+  evalExpr e (BD.Unevaluated s) = BD.Literal <$> e s
 
-  getValues ∷ ∀ e. SD.Expr (L.List e) → L.List e
-  getValues (SD.Literal vs) = vs
+  getValues ∷ ∀ e. BD.Expr (L.List e) → L.List e
+  getValues (BD.Literal vs) = vs
   getValues _ = L.Nil

@@ -21,10 +21,10 @@ import Data.String as S
 
 import Data.Tuple (uncurry)
 
-import Text.Markdown.BloomDown.Syntax as SD
-import Text.Markdown.BloomDown.Eval as SDE
-import Text.Markdown.BloomDown.Parser as SDP
-import Text.Markdown.BloomDown.Pretty as SDPR
+import Text.Markdown.BloomDown.Syntax as BD
+import Text.Markdown.BloomDown.Eval as BDE
+import Text.Markdown.BloomDown.Parser as BDP
+import Text.Markdown.BloomDown.Pretty as BDPR
 
 import Test.StrongCheck as SC
 import Test.StrongCheck.Arbitrary as SCA
@@ -56,132 +56,132 @@ instance arbitraryNonEmptyString ∷ SCA.Arbitrary NonEmptyString where
 instance showNonEmptyString ∷ Show NonEmptyString where
   show (NonEmptyString str) = str
 
-instance valueNonEmptyString ∷ SD.Value NonEmptyString where
+instance valueNonEmptyString ∷ BD.Value NonEmptyString where
   stringValue = NonEmptyString
   renderValue (NonEmptyString str) = str
 
-testDocument ∷ ∀ e. Either String (SD.BloomDownP NonEmptyString) → Eff (TestEffects e) Unit
-testDocument sd = do
-  let printed = SDPR.prettyPrintMd <$> sd
-      parsed = printed >>= SDP.parseMd
+testDocument ∷ ∀ e. Either String (BD.BloomDownP NonEmptyString) → Eff (TestEffects e) Unit
+testDocument BD = do
+  let printed = BDPR.prettyPrintMd <$> BD
+      parsed = printed >>= BDP.parseMd
 
   C.log
     $ "Original: \n   "
-    <> show sd
+    <> show BD
     <> "\nPrinted:\n   "
     <> show printed
     <> "\nParsed:\n   "
     <> show parsed
-  SC.assert (parsed == sd SC.<?> "Test failed")
+  SC.assert (parsed == BD SC.<?> "Test failed")
 
-failDocument ∷ ∀ e. Either String (SD.BloomDownP NonEmptyString) → Eff (TestEffects e) Unit
-failDocument sd = SC.assert (isLeft sd SC.<?> "Test failed")
+failDocument ∷ ∀ e. Either String (BD.BloomDownP NonEmptyString) → Eff (TestEffects e) Unit
+failDocument BD = SC.assert (isLeft BD SC.<?> "Test failed")
 
 static ∷ ∀ e. Eff (TestEffects e) Unit
 static = do
-  testDocument $ SDP.parseMd "Paragraph"
-  testDocument $ SDP.parseMd "Paragraph with spaces"
-  testDocument $ SDP.parseMd "Paragraph with an entity: &copy;"
-  testDocument $ SDP.parseMd "Paragraph with a [link](http://purescript.org)"
-  testDocument $ SDP.parseMd "Paragraph with an ![image](image.png)"
-  testDocument $ SDP.parseMd "Paragraph with some `embedded code`"
-  testDocument $ SDP.parseMd "Paragraph with some !`code which can be evaluated`"
-  testDocument $ SDP.parseMd "Paragraph with _emphasis_"
-  testDocument $ SDP.parseMd "Paragraph with _emphasis_ and __strong text__"
+  testDocument $ BDP.parseMd "Paragraph"
+  testDocument $ BDP.parseMd "Paragraph with spaces"
+  testDocument $ BDP.parseMd "Paragraph with an entity: &copy;"
+  testDocument $ BDP.parseMd "Paragraph with a [link](http://purescript.org)"
+  testDocument $ BDP.parseMd "Paragraph with an ![image](image.png)"
+  testDocument $ BDP.parseMd "Paragraph with some `embedded code`"
+  testDocument $ BDP.parseMd "Paragraph with some !`code which can be evaluated`"
+  testDocument $ BDP.parseMd "Paragraph with _emphasis_"
+  testDocument $ BDP.parseMd "Paragraph with _emphasis_ and __strong text__"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "Paragraph with a\n\
       \soft break"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "Paragraph with a  \n\
       \line break"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "Two\n\
       \\n\
       \paragraphs"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "Header\n\
       \==="
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "# Header\n\
       \\n\
       \Paragraph text"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "## Header\n\
       \\n\
       \Paragraph text"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "### Header\n\
       \\n\
       \Paragraph text"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "#### Header\n\
       \\n\
       \Paragraph text"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "##### Header\n\
       \\n\
       \Paragraph text"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "###### Header\n\
       \\n\
       \Paragraph text"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "Rule:\n\
       \\n\
       \-----"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "A blockquote:\n\
       \\n\
       \> Here is some text\n\
       \> inside a blockquote"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "A nested blockquote:\n\
       \\n\
       \> Here is some text\n\
       \> > Here is some more text"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "An unordered list:\n\
       \\n\
       \* Item 1\n\
       \* Item 2"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "An ordered list:\n\
       \\n\
       \1. Item 1\n\
       \1. Item 2"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "A nested list:\n\
       \\n\
       \1. Item 1\n\
@@ -189,7 +189,7 @@ static = do
       \   1. Item 3"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "Some indented code:\n\
       \\n\
       \    import Debug.Log\n\
@@ -197,7 +197,7 @@ static = do
       \    main = log \"Hello World\""
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "Some fenced code:\n\
       \\n\
       \```purescript\n\
@@ -207,7 +207,7 @@ static = do
       \```"
 
   testDocument $
-    SDP.parseMd
+    BDP.parseMd
       "Some fenced code which can be evaluated:\n\
       \\n\
       \!~~~purescript\n\
@@ -218,7 +218,7 @@ static = do
 
   let
     probablyParsedCodeForEvaluation =
-      SDP.parseMd
+      BDP.parseMd
         "Some evaluated fenced code:\n\
         \\n\
         \!~~~purescript\n\
@@ -229,61 +229,61 @@ static = do
 
   testDocument
     case probablyParsedCodeForEvaluation of
-      Right sd →
+      Right BD →
         Right
           $ un ID.Identity
-          $ SDE.eval
-            { code: \_ _ → pure $ SD.stringValue "Evaluated code block!"
+          $ BDE.eval
+            { code: \_ _ → pure $ BD.stringValue "Evaluated code block!"
             , textBox: \t →
                 case t of
-                  SD.PlainText _ → pure $ SD.PlainText $ pure "Evaluated plain text!"
-                  SD.Numeric _ → pure $ SD.Numeric $ pure $ HN.fromNumber 42.0
-                  SD.Date _ → pure $ SD.Date $ pure { month : 7, day : 30, year : 1992 }
-                  SD.Time (prec@SD.Minutes) _ → pure $ SD.Time prec $ pure { hours : 4, minutes : 52, seconds : M.Nothing }
-                  SD.Time (prec@SD.Seconds) _ → pure $ SD.Time prec $ pure { hours : 4, minutes : 52, seconds : M.Just 10 }
-                  SD.DateTime (prec@SD.Minutes) _ →
-                    pure $ SD.DateTime prec $ pure $
+                  BD.PlainText _ → pure $ BD.PlainText $ pure "Evaluated plain text!"
+                  BD.Numeric _ → pure $ BD.Numeric $ pure $ HN.fromNumber 42.0
+                  BD.Date _ → pure $ BD.Date $ pure { month : 7, day : 30, year : 1992 }
+                  BD.Time (prec@BD.Minutes) _ → pure $ BD.Time prec $ pure { hours : 4, minutes : 52, seconds : M.Nothing }
+                  BD.Time (prec@BD.Seconds) _ → pure $ BD.Time prec $ pure { hours : 4, minutes : 52, seconds : M.Just 10 }
+                  BD.DateTime (prec@BD.Minutes) _ →
+                    pure $ BD.DateTime prec $ pure $
                       { date : { month : 7, day : 30, year : 1992 }
                       , time : { hours : 4, minutes : 52, seconds : M.Nothing }
                       }
-                  SD.DateTime (prec@SD.Seconds) _ →
-                    pure $ SD.DateTime prec $ pure $
+                  BD.DateTime (prec@BD.Seconds) _ →
+                    pure $ BD.DateTime prec $ pure $
                       { date : { month : 7, day : 30, year : 1992 }
                       , time : { hours : 4, minutes : 52, seconds : M.Just 10 }
                       }
-            , value: \_ → pure $ SD.stringValue "Evaluated value!"
-            , list: \_ → pure $ L.singleton $ SD.stringValue "Evaluated list!"
-            }  sd
+            , value: \_ → pure $ BD.stringValue "Evaluated value!"
+            , list: \_ → pure $ L.singleton $ BD.stringValue "Evaluated list!"
+            }  BD
       a → a
 
-  testDocument $ SDP.parseMd "name = __ (Phil Freeman)"
-  testDocument $ SDP.parseMd "name = __ (!`name`)"
-  testDocument $ SDP.parseMd "sex* = (x) male () female () other"
-  testDocument $ SDP.parseMd "sex* = (!`def`) !`others`"
-  testDocument $ SDP.parseMd "city = {BOS, SFO, NYC} (NYC)"
-  testDocument $ SDP.parseMd "city = {!`...`} (!`...`)"
-  testDocument $ SDP.parseMd "phones = [] Android [x] iPhone [x] Blackberry"
-  testDocument $ SDP.parseMd "phones = [!`...`] !`...`"
-  testDocument $ SDP.parseMd "start = __ - __ - ____ (06-06-2015)"
-  testDocument $ SDP.parseMd "start = __ - __ - ____ (!`...`)"
-  testDocument $ SDP.parseMd "start = __ : __ (10:32 PM)"
-  failDocument $ SDP.parseMd "start = __ : __ (10:32:46 PM)"
-  failDocument $ SDP.parseMd "start = __ : __ : __ (10:32 PM)"
-  testDocument $ SDP.parseMd "start = __ : __ : __ (10:32:46 PM)"
-  testDocument $ SDP.parseMd "start = __ : __ (!`...`)"
-  testDocument $ SDP.parseMd "start = __-__-____ __:__ (06-06-2015 12:00 PM)"
-  testDocument $ SDP.parseMd "start = __ - __ - ____ __ : __ (!`...`)"
-  testDocument $ SDP.parseMd "[zip code]* = __ (12345)"
-  testDocument $ SDP.parseMd "defaultless = __"
-  testDocument $ SDP.parseMd "city = {BOS, SFO, NYC}"
-  testDocument $ SDP.parseMd "start = __ - __ - ____"
-  testDocument $ SDP.parseMd "start = __ : __"
-  testDocument $ SDP.parseMd "start = __ : __ : __"
-  testDocument $ SDP.parseMd "start = __ - __ - ____ __ : __ : __"
-  testDocument $ SDP.parseMd "zip* = ________"
-  testDocument $ SDP.parseMd "[numeric field] = #______ (23)"
-  testDocument $ SDP.parseMd "i9a0qvg8* = ______ (9a0qvg8h)"
-  testDocument $ SDP.parseMd "xeiodbdy  = [x] "
+  testDocument $ BDP.parseMd "name = __ (Phil Freeman)"
+  testDocument $ BDP.parseMd "name = __ (!`name`)"
+  testDocument $ BDP.parseMd "sex* = (x) male () female () other"
+  testDocument $ BDP.parseMd "sex* = (!`def`) !`others`"
+  testDocument $ BDP.parseMd "city = {BOS, SFO, NYC} (NYC)"
+  testDocument $ BDP.parseMd "city = {!`...`} (!`...`)"
+  testDocument $ BDP.parseMd "phones = [] Android [x] iPhone [x] Blackberry"
+  testDocument $ BDP.parseMd "phones = [!`...`] !`...`"
+  testDocument $ BDP.parseMd "start = __ - __ - ____ (06-06-2015)"
+  testDocument $ BDP.parseMd "start = __ - __ - ____ (!`...`)"
+  testDocument $ BDP.parseMd "start = __ : __ (10:32 PM)"
+  failDocument $ BDP.parseMd "start = __ : __ (10:32:46 PM)"
+  failDocument $ BDP.parseMd "start = __ : __ : __ (10:32 PM)"
+  testDocument $ BDP.parseMd "start = __ : __ : __ (10:32:46 PM)"
+  testDocument $ BDP.parseMd "start = __ : __ (!`...`)"
+  testDocument $ BDP.parseMd "start = __-__-____ __:__ (06-06-2015 12:00 PM)"
+  testDocument $ BDP.parseMd "start = __ - __ - ____ __ : __ (!`...`)"
+  testDocument $ BDP.parseMd "[zip code]* = __ (12345)"
+  testDocument $ BDP.parseMd "defaultless = __"
+  testDocument $ BDP.parseMd "city = {BOS, SFO, NYC}"
+  testDocument $ BDP.parseMd "start = __ - __ - ____"
+  testDocument $ BDP.parseMd "start = __ : __"
+  testDocument $ BDP.parseMd "start = __ : __ : __"
+  testDocument $ BDP.parseMd "start = __ - __ - ____ __ : __ : __"
+  testDocument $ BDP.parseMd "zip* = ________"
+  testDocument $ BDP.parseMd "[numeric field] = #______ (23)"
+  testDocument $ BDP.parseMd "i9a0qvg8* = ______ (9a0qvg8h)"
+  testDocument $ BDP.parseMd "xeiodbdy  = [x] "
 
   C.log "All static tests passed!"
 
@@ -296,16 +296,16 @@ generated = do
       Trampoline.runTrampoline
         $ Gen.sample'
             10 (Gen.GenState { size: 10, seed })
-            (SDPR.prettyPrintMd <<< runTestBloomDown <$> SCA.arbitrary)
+            (BDPR.prettyPrintMd <<< runTestBloomDown <$> SCA.arbitrary)
 
   TR.traverse C.log docs
 
-  SC.quickCheck' 100 \(TestBloomDown sd) →
+  SC.quickCheck' 100 \(TestBloomDown BD) →
     let
-      printed = SDPR.prettyPrintMd sd
-      parsed = SDP.parseMd printed
-    in parsed == (Right sd) SC.<?> "Pretty printer and parser incompatible for document: " <>
-      "\nOriginal: \n" <> show sd <>
+      printed = BDPR.prettyPrintMd BD
+      parsed = BDP.parseMd printed
+    in parsed == (Right BD) SC.<?> "Pretty printer and parser incompatible for document: " <>
+      "\nOriginal: \n" <> show BD <>
       "\nPrinted: \n" <> printed <>
       "\nParsed: \n" <> show parsed
   C.log "All dynamic passed"
@@ -325,19 +325,19 @@ smallArrayOf g = do
   len ← Gen.chooseInt 1 2
   Gen.vectorOf len g
 
-newtype TestBloomDown = TestBloomDown (SD.BloomDownP NonEmptyString)
+newtype TestBloomDown = TestBloomDown (BD.BloomDownP NonEmptyString)
 
-runTestBloomDown ∷ TestBloomDown → SD.BloomDownP NonEmptyString
-runTestBloomDown (TestBloomDown sd) = sd
+runTestBloomDown ∷ TestBloomDown → BD.BloomDownP NonEmptyString
+runTestBloomDown (TestBloomDown BD) = BD
 
 instance arbBloomDown ∷ SCA.Arbitrary TestBloomDown where
-  arbitrary = (TestBloomDown <<< SD.BloomDown <<< L.fromFoldable) <$> blocks
+  arbitrary = (TestBloomDown <<< BD.BloomDown <<< L.fromFoldable) <$> blocks
 
 three ∷ ∀ a. a → a → a → Array a
 three a b c = [a, b, c]
 
 
-blocks ∷ ∀ a. (SCA.Arbitrary a, SD.Value a) ⇒ Gen.Gen (Array (SD.Block a))
+blocks ∷ ∀ a. (SCA.Arbitrary a, BD.Value a) ⇒ Gen.Gen (Array (BD.Block a))
 blocks =
   Gen.oneOf (smallArrayOf block0)
     [ A.singleton <$> bq
@@ -345,64 +345,64 @@ blocks =
     , A.singleton <$> cb
     ]
   where
-  block0 ∷ Gen.Gen (SD.Block a)
+  block0 ∷ Gen.Gen (BD.Block a)
   block0 =
-    Gen.oneOf (SD.Paragraph <<< L.fromFoldable <$> inlines)
-      [ SD.Header <$> Gen.chooseInt 1 6 <*> (L.singleton <$> simpleText)
-      , SD.CodeBlock <$>
-        (SD.Fenced <$> (Gen.elements true (L.singleton false)) <*>
+    Gen.oneOf (BD.Paragraph <<< L.fromFoldable <$> inlines)
+      [ BD.Header <$> Gen.chooseInt 1 6 <*> (L.singleton <$> simpleText)
+      , BD.CodeBlock <$>
+        (BD.Fenced <$> (Gen.elements true (L.singleton false)) <*>
          alphaNum)
         <*> (L.fromFoldable <$> smallArrayOf alphaNum)
-      , SD.LinkReference <$> alphaNum <*> alphaNum
-      , pure SD.Rule
+      , BD.LinkReference <$> alphaNum <*> alphaNum
+      , pure BD.Rule
       ]
 
-  bq ∷ Gen.Gen (SD.Block a)
-  bq = SD.Blockquote <$> (L.singleton <$> block0)
+  bq ∷ Gen.Gen (BD.Block a)
+  bq = BD.Blockquote <$> (L.singleton <$> block0)
 
-  cb ∷ Gen.Gen (SD.Block a)
-  cb = SD.CodeBlock SD.Indented <<< L.fromFoldable <$> smallArrayOf alphaNum
+  cb ∷ Gen.Gen (BD.Block a)
+  cb = BD.CodeBlock BD.Indented <<< L.fromFoldable <$> smallArrayOf alphaNum
 
-  list ∷ Gen.Gen (SD.Block a)
+  list ∷ Gen.Gen (BD.Block a)
   list =
-    SD.Lst
-      <$> Gen.oneOf (SD.Bullet <$> (Gen.elements "-" $ L.fromFoldable ["+", "*"])) [ SD.Ordered <$> (Gen.elements ")" $ L.singleton ".")]
+    BD.Lst
+      <$> Gen.oneOf (BD.Bullet <$> (Gen.elements "-" $ L.fromFoldable ["+", "*"])) [ BD.Ordered <$> (Gen.elements ")" $ L.singleton ".")]
       <*> (L.fromFoldable <$> tinyArrayOf (L.fromFoldable <$> (tinyArrayOf block0)))
 
-inlines ∷ ∀ a. (SCA.Arbitrary a, SD.Value a) ⇒ Gen.Gen (Array (SD.Inline a))
+inlines ∷ ∀ a. (SCA.Arbitrary a, BD.Value a) ⇒ Gen.Gen (Array (BD.Inline a))
 inlines =
   Gen.oneOf inlines0
     [ A.singleton <$> link
     , A.singleton <$> formField
     ]
   where
-  inlines0 ∷ Gen.Gen (Array (SD.Inline a))
+  inlines0 ∷ Gen.Gen (Array (BD.Inline a))
   inlines0 =
     Gen.oneOf (A.singleton <$> simpleText)
      [ three
          <$> simpleText
-         <*> (Gen.elements SD.Space $ L.fromFoldable [SD.SoftBreak, SD.LineBreak])
+         <*> (Gen.elements BD.Space $ L.fromFoldable [BD.SoftBreak, BD.LineBreak])
          <*> simpleText
-     , A.singleton <$> (SD.Code <$> (Gen.elements true (L.singleton false)) <*> alphaNum)
+     , A.singleton <$> (BD.Code <$> (Gen.elements true (L.singleton false)) <*> alphaNum)
      ]
 
-  link ∷ Gen.Gen (SD.Inline a)
-  link = SD.Link <$> (L.fromFoldable <$> inlines0) <*> linkTarget
+  link ∷ Gen.Gen (BD.Inline a)
+  link = BD.Link <$> (L.fromFoldable <$> inlines0) <*> linkTarget
 
-  linkTarget ∷ Gen.Gen SD.LinkTarget
+  linkTarget ∷ Gen.Gen BD.LinkTarget
   linkTarget =
-    Gen.oneOf (SD.InlineLink <$> alphaNum)
-      [ SD.ReferenceLink <<< M.Just <$> alphaNum ]
+    Gen.oneOf (BD.InlineLink <$> alphaNum)
+      [ BD.ReferenceLink <<< M.Just <$> alphaNum ]
 
-  formField ∷ Gen.Gen (SD.Inline a)
+  formField ∷ Gen.Gen (BD.Inline a)
   formField =
-    SD.FormField
+    BD.FormField
       <$> alphaNum
       <*> Gen.elements true (L.singleton false)
       <*> SCA.arbitrary
 
-simpleText ∷ ∀ a. Gen.Gen (SD.Inline a)
-simpleText = SD.Str <$> alphaNum
+simpleText ∷ ∀ a. Gen.Gen (BD.Inline a)
+simpleText = BD.Str <$> alphaNum
 
 alphaNum ∷ Gen.Gen String
 alphaNum = do

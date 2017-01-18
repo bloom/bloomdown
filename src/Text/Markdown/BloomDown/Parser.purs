@@ -20,7 +20,7 @@ import Partial.Unsafe (unsafePartial)
 
 import Text.Markdown.BloomDown.Parser.Inline as Inline
 import Text.Markdown.BloomDown.Parser.References as Ref
-import Text.Markdown.BloomDown.Syntax as SD
+import Text.Markdown.BloomDown.Syntax as BD
 
 data Container a
   = CText String
@@ -29,27 +29,27 @@ data Container a
   | CATXHeader Int String
   | CSetextHeader Int
   | CBlockquote (L.List (Container a))
-  | CListItem SD.ListType (L.List (Container a))
+  | CListItem BD.ListType (L.List (Container a))
   | CCodeBlockFenced Boolean String (L.List String)
   | CCodeBlockIndented (L.List String)
-  | CLinkReference (SD.Block a)
+  | CLinkReference (BD.Block a)
 
 isSpace ∷ String → Boolean
 isSpace " " = true
 isSpace _  = false
 
-isDigit ∷ String → Boolean
-isDigit "0" = true
-isDigit "1" = true
-isDigit "2" = true
-isDigit "3" = true
-isDigit "4" = true
-isDigit "5" = true
-isDigit "6" = true
-isDigit "7" = true
-isDigit "8" = true
-isDigit "9" = true
-isDigit _ = false
+iBDigit ∷ String → Boolean
+iBDigit "0" = true
+iBDigit "1" = true
+iBDigit "2" = true
+iBDigit "3" = true
+iBDigit "4" = true
+iBDigit "5" = true
+iBDigit "6" = true
+iBDigit "7" = true
+iBDigit "8" = true
+iBDigit "9" = true
+iBDigit _ = false
 
 allChars ∷ (String → Boolean) → String → Boolean
 allChars p = all p <<< S.split (S.Pattern "")
@@ -136,24 +136,24 @@ isBulleted s =
 isOrderedListMarker ∷ String → Boolean
 isOrderedListMarker s =
   let
-    n = S.count (isDigit <<< S.singleton) s
+    n = S.count (iBDigit <<< S.singleton) s
     next = S.take 1 (S.drop n s)
     ls = countLeadingSpaces (S.drop (n + 1) s)
   in
     n > 0 && (next == "." || next == ")") && ls > 0
 
-listItemType ∷ String → SD.ListType
+listItemType ∷ String → BD.ListType
 listItemType s
-  | isBulleted s = SD.Bullet (S.take 1 s)
+  | isBulleted s = BD.Bullet (S.take 1 s)
   | otherwise =
-      let n = S.count (isDigit <<< S.singleton) s
-      in SD.Ordered (S.take 1 (S.drop n s))
+      let n = S.count (iBDigit <<< S.singleton) s
+      in BD.Ordered (S.take 1 (S.drop n s))
 
 listItemIndent ∷ String → Int
 listItemIndent s
   | isBulleted s = 1 + min 4 (countLeadingSpaces (S.drop 1 s))
   | otherwise =
-      let n = S.count (isDigit <<< S.singleton) s
+      let n = S.count (iBDigit <<< S.singleton) s
       in n + 1 + min 4 (countLeadingSpaces (S.drop (n + 1) s))
 
 isListItemLine ∷ String → Boolean
@@ -167,7 +167,7 @@ isIndentedTo n s = countLeadingSpaces s >= n
 splitListItem
   ∷ String
   → L.List String
-  → { listType ∷ SD.ListType
+  → { listType ∷ BD.ListType
      , listItemLines ∷ L.List String
      , otherLines ∷ L.List String
      }
@@ -302,7 +302,7 @@ getCText ∷ ∀ a. Container a → String
 getCText (CText s) = s
 getCText _ = ""
 
-isListItem ∷ ∀ a. SD.ListType → Container a → Boolean
+isListItem ∷ ∀ a. BD.ListType → Container a → Boolean
 isListItem lt1 (CListItem lt2 _) = lt1 == lt2
 isListItem _ _ = false
 
@@ -312,65 +312,65 @@ getCListItem _ = L.Nil
 
 parseBlocks
   ∷ ∀ a
-  . (SD.Value a)
+  . (BD.Value a)
   ⇒ L.List (Container a)
-  → Either String (L.List (SD.Block a))
+  → Either String (L.List (BD.Block a))
 parseBlocks =
   case _ of
     L.Nil → pure L.Nil
     (CText s) : (CSetextHeader n) : cs → do
       hd ← Inline.parseInlines $ L.singleton s
       tl ← parseBlocks cs
-      pure $ (SD.Header n hd) : tl
+      pure $ (BD.Header n hd) : tl
     (CText s) : cs → do
       let
         sp = L.span isTextContainer cs
       is ← Inline.parseInlines $ s : (map getCText sp.init)
       tl ← parseBlocks sp.rest
-      pure $ (SD.Paragraph is) : tl
+      pure $ (BD.Paragraph is) : tl
     CRule : cs →
-      map (SD.Rule : _) $ parseBlocks cs
+      map (BD.Rule : _) $ parseBlocks cs
     (CATXHeader n s) : cs → do
       hd ← Inline.parseInlines $ L.singleton s
       tl ← parseBlocks cs
-      pure $ (SD.Header n hd) : tl
+      pure $ (BD.Header n hd) : tl
     (CBlockquote cs) : cs1 → do
       hd ← parseBlocks cs
       tl ← parseBlocks cs1
-      pure $ (SD.Blockquote hd) : tl
+      pure $ (BD.Blockquote hd) : tl
     (CListItem lt cs) : cs1 → do
       let
         sp = L.span (isListItem lt) cs1
       bs ← parseBlocks cs
       bss ← traverse (parseBlocks <<< getCListItem) sp.init
       tl ← parseBlocks sp.rest
-      pure $ (SD.Lst lt (bs : bss)) : tl
+      pure $ (BD.Lst lt (bs : bss)) : tl
     (CCodeBlockIndented ss) : cs →
-      map ((SD.CodeBlock SD.Indented ss) : _) $ parseBlocks cs
+      map ((BD.CodeBlock BD.Indented ss) : _) $ parseBlocks cs
     (CCodeBlockFenced eval info ss) : cs →
-      map ((SD.CodeBlock (SD.Fenced eval info) ss) : _) $ parseBlocks cs
+      map ((BD.CodeBlock (BD.Fenced eval info) ss) : _) $ parseBlocks cs
     (CLinkReference b) : cs →
       map (b : _) $ parseBlocks cs
     L.Cons _ cs →
       parseBlocks cs
 
-validateBlock ∷ ∀ a. SD.Block a → V.V (Array String) (SD.Block a)
+validateBlock ∷ ∀ a. BD.Block a → V.V (Array String) (BD.Block a)
 validateBlock =
   case _ of
-    SD.Paragraph inls → SD.Paragraph <$> traverse Inline.validateInline inls
-    SD.Header i inls → SD.Header i <$> traverse Inline.validateInline inls
-    SD.Blockquote bls → SD.Blockquote <$> traverse validateBlock bls
-    SD.Lst lt blss → SD.Lst lt <$> traverse (traverse validateBlock) blss
+    BD.Paragraph inls → BD.Paragraph <$> traverse Inline.validateInline inls
+    BD.Header i inls → BD.Header i <$> traverse Inline.validateInline inls
+    BD.Blockquote bls → BD.Blockquote <$> traverse validateBlock bls
+    BD.Lst lt blss → BD.Lst lt <$> traverse (traverse validateBlock) blss
     b → pure b
 
-validateBloomDown ∷ ∀ a. SD.BloomDownP a → V.V (Array String) (SD.BloomDownP a)
-validateBloomDown (SD.BloomDown bls) = SD.BloomDown <$> traverse validateBlock bls
+validateBloomDown ∷ ∀ a. BD.BloomDownP a → V.V (Array String) (BD.BloomDownP a)
+validateBloomDown (BD.BloomDown bls) = BD.BloomDown <$> traverse validateBlock bls
 
 tabsToSpaces ∷ String → String
 tabsToSpaces = S.replace (S.Pattern "\t") (S.Replacement "    ")
 
-parseMd ∷ ∀ a. (SD.Value a) ⇒ String → Either String (SD.BloomDownP a)
-parseMd s = map SD.BloomDown bs
+parseMd ∷ ∀ a. (BD.Value a) ⇒ String → Either String (BD.BloomDownP a)
+parseMd s = map BD.BloomDown bs
   where
     lines = L.fromFoldable $ S.split (S.Pattern "\n") $ S.replace (S.Pattern "\r") (S.Replacement "") $ tabsToSpaces s
     ctrs = parseContainers mempty lines
